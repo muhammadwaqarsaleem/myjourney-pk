@@ -10,6 +10,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
+import authRoutes from './routes/authRoutes.js';
 
 // Load environment variables from .env file into process.env early in bootstrap lifecycle
 dotenv.config();
@@ -88,6 +89,11 @@ app.get('/api/health', (req, res) => {
     message: 'myjourney.pk backend running smoothly',
   });
 });
+
+/**
+ * Authentication and User Routes
+ */
+app.use('/api/auth', authRoutes);
 
 // ==========================================
 // 404 & Centralized Error Handling
