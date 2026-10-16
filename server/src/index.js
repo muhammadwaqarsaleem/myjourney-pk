@@ -11,6 +11,7 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
+import destinationRoutes from './routes/destinationRoutes.js';
 
 // Load environment variables from .env file into process.env early in bootstrap lifecycle
 dotenv.config();
@@ -94,6 +95,11 @@ app.get('/api/health', (req, res) => {
  * Authentication and User Routes
  */
 app.use('/api/auth', authRoutes);
+
+/**
+ * Destinations and Regional Cuisine Routes
+ */
+app.use('/api/destinations', destinationRoutes);
 
 // ==========================================
 // 404 & Centralized Error Handling
