@@ -12,6 +12,7 @@ import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import destinationRoutes from './routes/destinationRoutes.js';
+import blogRoutes from './routes/blogRoutes.js';
 
 // Load environment variables from .env file into process.env early in bootstrap lifecycle
 dotenv.config();
@@ -100,6 +101,11 @@ app.use('/api/auth', authRoutes);
  * Destinations and Regional Cuisine Routes
  */
 app.use('/api/destinations', destinationRoutes);
+
+/**
+ * Community Travelogues and Blog Routes
+ */
+app.use('/api/blogs', blogRoutes);
 
 // ==========================================
 // 404 & Centralized Error Handling
