@@ -8,6 +8,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import Destination from '../models/Destination.js';
 import User from '../models/User.js';
+import { seedSampleBlogs } from './seedBlogs.js';
 
 // Initialize environment variables from .env
 dotenv.config();
@@ -326,6 +327,14 @@ const seedDatabase = async () => {
     console.log(`🎉 Successfully seeded ${inserted.length} starter destinations:`);
     inserted.forEach((d) => {
       console.log(`   - 📍 ${d.name} (${d.province}) | Slug: /${d.slug} | Sites: ${d.sitesToVisit.length} | Foods: ${d.famousFoods.length}`);
+    });
+
+    // Seed realistic travelogues and stories linked to destinations
+    console.log('\n📖 Seeding community travelogues & blog posts...');
+    const seededBlogs = await seedSampleBlogs(inserted, creatorUser);
+    console.log(`🎉 Successfully seeded ${seededBlogs.length} travel stories:`);
+    seededBlogs.forEach((b) => {
+      console.log(`   - ✍️  ${b.title} | Slug: /${b.slug} | Read: ${b.readTime} min | Views: ${b.views}`);
     });
 
     await mongoose.connection.close();
