@@ -5,10 +5,17 @@
  */
 
 import mongoose from 'mongoose';
+import dns from 'dns';
 import dotenv from 'dotenv';
 import Destination from '../models/Destination.js';
 import User from '../models/User.js';
+import Hotel from '../models/Hotel.js';
 import { seedSampleBlogs } from './seedBlogs.js';
+
+// Resolve MongoDB SRV records via reliable public DNS
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch {}
 
 // Initialize environment variables from .env
 dotenv.config();
@@ -336,6 +343,121 @@ const seedDatabase = async () => {
     seededBlogs.forEach((b) => {
       console.log(`   - ✍️  ${b.title} | Slug: /${b.slug} | Read: ${b.readTime} min | Views: ${b.views}`);
     });
+
+    // Seed realistic hotels connected to destinations
+    console.log('\n🏨 Seeding hotels directory...');
+    const hunzaDest = inserted.find((d) => d.slug === 'hunza-valley');
+    const lahoreDest = inserted.find((d) => d.slug === 'lahore');
+
+    const sampleHotels = [];
+
+    if (hunzaDest) {
+      sampleHotels.push({
+        name: 'Hunza Serena Inn',
+        slug: 'serena-hotel-hunza',
+        destination: hunzaDest._id,
+        address: 'Karimabad, Hunza Valley, Gilgit-Baltistan',
+        pricePerNightMin: 28000,
+        rating: 4.8,
+        reviewCount: 142,
+        images: [
+          'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80',
+          'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=1200&q=80',
+          'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=1200&q=80',
+        ],
+        coverImage:
+          'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80',
+        amenities: [
+          'Free Wi-Fi',
+          'Heating',
+          'Mountain View',
+          'Breakfast Included',
+          'Generator Backup',
+          'Free Parking',
+          'Restaurant',
+          'Airport Shuttle',
+        ],
+        roomTypes: [
+          {
+            title: 'Deluxe Valley View Room',
+            capacity: 2,
+            pricePerNight: 28000,
+            description:
+              'Spacious room with traditional Hunzakut woodwork and private balcony overlooking Ultar Sar and Baltit Fort.',
+          },
+          {
+            title: 'Executive Heritage Suite',
+            capacity: 3,
+            pricePerNight: 42000,
+            description:
+              'Luxury suite featuring antique hand-carved furnishings, fireplace, panoramic mountain views, and complimentary breakfast.',
+          },
+        ],
+        contactPhone: '+92 5813 457660',
+        contactEmail: 'reservations.hsi@serena.com.pk',
+        isFeatured: true,
+      });
+    }
+
+    if (lahoreDest) {
+      sampleHotels.push({
+        name: 'Pearl Continental Hotel Lahore',
+        slug: 'pearl-continental-lahore',
+        destination: lahoreDest._id,
+        address: 'Shahrah-e-Quaid-e-Azam, Mall Road, Lahore, Punjab',
+        pricePerNightMin: 32000,
+        rating: 4.7,
+        reviewCount: 389,
+        images: [
+          'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80',
+          'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=1200&q=80',
+          'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=80',
+        ],
+        coverImage:
+          'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80',
+        amenities: [
+          'Free Wi-Fi',
+          'Swimming Pool',
+          'Fitness Center',
+          'Generator Backup',
+          'Breakfast Included',
+          'Valet Parking',
+          'Fine Dining',
+          'Concierge',
+        ],
+        roomTypes: [
+          {
+            title: 'Deluxe King Room',
+            capacity: 2,
+            pricePerNight: 32000,
+            description:
+              'Elegant contemporary room with king bed, marble bathroom, executive workspace, and city view.',
+          },
+          {
+            title: 'Executive Royal Suite',
+            capacity: 4,
+            pricePerNight: 58000,
+            description:
+              'Expansive executive suite with separate lounge, dining area, butler service, and executive lounge access.',
+          },
+        ],
+        contactPhone: '+92 42 111 505 505',
+        contactEmail: 'pchl@pchotels.com',
+        isFeatured: true,
+      });
+    }
+
+    if (sampleHotels.length > 0) {
+      const hotelSlugs = sampleHotels.map((h) => h.slug);
+      const deletedHotels = await Hotel.deleteMany({ slug: { $in: hotelSlugs } });
+      console.log(`🧹 Cleared ${deletedHotels.deletedCount} existing sample hotel(s).`);
+
+      const seededHotels = await Hotel.insertMany(sampleHotels);
+      console.log(`🎉 Successfully seeded ${seededHotels.length} luxury hotels:`);
+      seededHotels.forEach((h) => {
+        console.log(`   - 🏨 ${h.name} | Slug: /${h.slug} | Min PKR: ${h.pricePerNightMin} | Rating: ${h.rating}`);
+      });
+    }
 
     await mongoose.connection.close();
     console.log('🔒 Database connection closed cleanly.');
