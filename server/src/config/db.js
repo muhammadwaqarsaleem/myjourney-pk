@@ -6,6 +6,14 @@
  */
 
 import mongoose from 'mongoose';
+import dns from 'dns';
+
+// Resolve MongoDB SRV records via reliable public DNS (prevents querySrv EREFUSED from ISP/router DNS)
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch {
+  // Ignore if custom servers cannot be set in restricted runtime environments
+}
 
 /**
  * Establishes an asynchronous connection to MongoDB via Mongoose.
