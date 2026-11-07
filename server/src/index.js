@@ -15,6 +15,9 @@ import destinationRoutes from './routes/destinationRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
 import hotelRoutes from './routes/hotelRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js';
+import reviewRoutes from './routes/reviewRoutes.js';
+import bookmarkRoutes from './routes/bookmarkRoutes.js';
+import contactRoutes from './routes/contactRoutes.js';
 
 // Load environment variables from .env file into process.env early in bootstrap lifecycle
 dotenv.config();
@@ -118,6 +121,21 @@ app.use('/api/hotels', hotelRoutes);
  * Booking Inquiries and Reservations Routes
  */
 app.use('/api/bookings', bookingRoutes);
+
+/**
+ * Destination Reviews Routes
+ */
+app.use('/api/reviews', reviewRoutes);
+
+/**
+ * User Bookmarks Routes
+ */
+app.use('/api/bookmarks', bookmarkRoutes);
+
+/**
+ * Contact Us Routes
+ */
+app.use('/api/contact', contactRoutes);
 
 // ==========================================
 // 404 & Centralized Error Handling
