@@ -1,13 +1,16 @@
 /**
  * @fileoverview User model definition and schema configuration for MongoDB.
  * Implements password hashing via bcryptjs, credential comparison,
- * and role-based access attributes (user, creator, admin).
+ * and role-based access control attributes (user, creator, admin).
+ * Bookmarks are stored as separate ObjectId arrays for destinations and hotels.
  * @module models/User
  */
 
+// External dependencies
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+// Schema definition
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -50,15 +53,20 @@ const userSchema = new mongoose.Schema(
       default: '',
       maxlength: [250, 'Bio cannot exceed 250 characters'],
     },
-    bookmarks: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        refPath: 'bookmarkModel',
-      },
-    ],
-    bookmarkModel: {
-      type: String,
-      default: 'Destination',
+    // Structured bookmarks split by item type for independent population
+    bookmarks: {
+      destinations: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Destination',
+        },
+      ],
+      hotels: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Hotel',
+        },
+      ],
     },
     createdAt: {
       type: Date,
@@ -71,11 +79,9 @@ const userSchema = new mongoose.Schema(
 );
 
 /**
- * Pre-save Mongoose middleware hook.
- * Hashes the user password using bcryptjs whenever the password field is modified.
+ * Pre-save hook: hashes the password using bcryptjs whenever the password field is modified.
  */
 userSchema.pre('save', async function () {
-  // Only hash password if it has been modified or is new
   if (!this.isModified('password')) {
     return;
   }
@@ -85,10 +91,10 @@ userSchema.pre('save', async function () {
 });
 
 /**
- * Compares an entered plain-text password with the hashed password stored in the database.
+ * Compares a plain-text candidate password against the stored hash.
  *
- * @param {string} enteredPassword - Plaintext candidate password to evaluate.
- * @returns {Promise<boolean>} True if password matches the hash, false otherwise.
+ * @param {string} enteredPassword - Plaintext password to evaluate.
+ * @returns {Promise<boolean>} True if the password matches, false otherwise.
  */
 userSchema.methods.comparePassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
