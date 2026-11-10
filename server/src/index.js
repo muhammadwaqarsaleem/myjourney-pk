@@ -18,6 +18,7 @@ import bookingRoutes from './routes/bookingRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import bookmarkRoutes from './routes/bookmarkRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
+import itineraryRoutes from './routes/itineraryRoutes.js';
 
 // Load environment variables from .env file into process.env early in bootstrap lifecycle
 dotenv.config();
@@ -136,6 +137,11 @@ app.use('/api/bookmarks', bookmarkRoutes);
  * Contact Us Routes
  */
 app.use('/api/contact', contactRoutes);
+
+/**
+ * AI Travel Assistant & Itinerary Planner Routes
+ */
+app.use('/api/itinerary', itineraryRoutes);
 
 // ==========================================
 // 404 & Centralized Error Handling
