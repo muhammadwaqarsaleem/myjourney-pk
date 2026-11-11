@@ -19,6 +19,7 @@ import reviewRoutes from './routes/reviewRoutes.js';
 import bookmarkRoutes from './routes/bookmarkRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
 import itineraryRoutes from './routes/itineraryRoutes.js';
+import aiChatRoutes from './routes/aiChatRoutes.js';
 
 // Load environment variables from .env file into process.env early in bootstrap lifecycle
 dotenv.config();
@@ -142,6 +143,11 @@ app.use('/api/contact', contactRoutes);
  * AI Travel Assistant & Itinerary Planner Routes
  */
 app.use('/api/itinerary', itineraryRoutes);
+
+/**
+ * Conversational AI Tourism Guide Chat Routes
+ */
+app.use('/api/ai', aiChatRoutes);
 
 // ==========================================
 // 404 & Centralized Error Handling
