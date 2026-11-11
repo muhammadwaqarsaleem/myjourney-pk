@@ -449,7 +449,7 @@ export const generateItineraryPlan = async ({
 
   // 4. Invoke Google Gemini API
   const prompt = buildPrompt(destination, tripOptions);
-  const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  const modelName = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
 
   try {
     const response = await genAI.models.generateContent({
