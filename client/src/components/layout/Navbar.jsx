@@ -188,7 +188,7 @@ export default function Navbar() {
 
                       {canWriteBlog && (
                         <Link
-                          to="/blogs"
+                          to="/blogs/create"
                           onClick={closeMenus}
                           className="flex items-center gap-3 px-4 py-2.5 text-sm text-brand-emerald font-medium hover:bg-brand-sand/60 transition"
                           role="menuitem"
@@ -326,7 +326,7 @@ export default function Navbar() {
                   </Link>
                   {canWriteBlog && (
                     <Link
-                      to="/blogs"
+                      to="/blogs/create"
                       onClick={closeMenus}
                       className="flex items-center gap-3 px-4 py-3 min-h-[44px] rounded-xl text-brand-emerald font-semibold hover:bg-brand-sand text-base"
                     >

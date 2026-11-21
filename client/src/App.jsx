@@ -8,6 +8,8 @@ import DestinationDetailPage from './pages/DestinationDetailPage';
 import HotelsPage from './pages/HotelsPage';
 import HotelDetailPage from './pages/HotelDetailPage';
 import BlogsPage from './pages/BlogsPage';
+import BlogDetailPage from './pages/BlogDetailPage';
+import WriteBlogPage from './pages/WriteBlogPage';
 import PlannerPage from './pages/PlannerPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -27,6 +29,15 @@ export default function App() {
         <Route path="hotels" element={<HotelsPage />} />
         <Route path="hotels/:slug" element={<HotelDetailPage />} />
         <Route path="blogs" element={<BlogsPage />} />
+        <Route
+          path="blogs/create"
+          element={
+            <ProtectedRoute allowedRoles={['creator', 'admin']}>
+              <WriteBlogPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="blogs/:slug" element={<BlogDetailPage />} />
         <Route path="planner" element={<PlannerPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
