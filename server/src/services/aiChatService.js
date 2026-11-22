@@ -326,29 +326,44 @@ export const generateChatReply = async (message, conversationHistory = []) => {
     parts: [{ text: message.trim() }],
   });
 
-  const modelName = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+  const primaryModel = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+  const candidateModels = Array.from(new Set([primaryModel, 'gemini-3.5-flash', 'gemini-3.6-flash', 'gemini-3.1-flash-lite']));
 
-  try {
-    const response = await genAI.models.generateContent({
-      model: modelName,
-      contents,
-      config: {
-        systemInstruction: systemPrompt,
-        temperature: 0.7,
-      },
-    });
+  let lastError = null;
+  for (const model of candidateModels) {
+    try {
+      const response = await genAI.models.generateContent({
+        model,
+        contents,
+        config: {
+          systemInstruction: systemPrompt,
+          temperature: 0.7,
+        },
+      });
 
-    const replyText = response.text?.trim();
+      const replyText = response.text?.trim();
 
-    if (!replyText) {
-      throw new Error('Received empty response from Gemini model.');
+      if (!replyText) {
+        throw new Error('Received empty response from Gemini model.');
+      }
+
+      console.log(`✨ [aiChatService] Successfully generated chat reply via Gemini (${model})`);
+      return replyText;
+    } catch (apiError) {
+      lastError = apiError;
+      const detail = apiError.cause ? `${apiError.message} (${apiError.cause.message || apiError.cause.code || 'network offline'})` : apiError.message;
+      console.warn(`⚠️ [aiChatService] Gemini attempt with model ${model} failed: ${detail}`);
+
+      // If connection to Google failed at the network/socket level, do not waste time retrying other models
+      if (apiError.message?.includes('fetch failed')) {
+        console.warn('⚠️ [aiChatService] Local network or internet connection is offline. Skipping model fallback.');
+        break;
+      }
     }
-
-    return replyText;
-  } catch (apiError) {
-    console.warn(`⚠️ [aiChatService] Gemini API call failed (${apiError.message}). Utilizing high-fidelity mock fallback.`);
-    return generateMockChatReply(message);
   }
+
+  console.warn(`⚠️ [aiChatService] All Gemini models failed (${lastError?.message}). Utilizing high-fidelity mock fallback.`);
+  return generateMockChatReply(message);
 };
 
 export default {

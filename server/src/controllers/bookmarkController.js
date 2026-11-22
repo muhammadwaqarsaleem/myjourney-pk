@@ -62,13 +62,13 @@ export const toggleBookmark = async (req, res) => {
       updatedUser = await User.findByIdAndUpdate(
         req.user._id,
         { $pull: { [arrayPath]: itemId } },
-        { new: true }
+        { returnDocument: 'after' }
       );
     } else {
       updatedUser = await User.findByIdAndUpdate(
         req.user._id,
         { $addToSet: { [arrayPath]: itemId } },
-        { new: true }
+        { returnDocument: 'after' }
       );
     }
 

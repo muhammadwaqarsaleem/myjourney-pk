@@ -263,6 +263,13 @@ export default function HotelDetailPage() {
           <img
             src={mainDisplayImage}
             alt={hotel.name}
+            loading="lazy"
+            decoding="async"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src =
+                'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80';
+            }}
             className="w-full h-full object-cover opacity-90 transition-all duration-300"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent" />
@@ -326,7 +333,18 @@ export default function HotelDetailPage() {
                 }`}
                 aria-label={`View photo ${i + 1}`}
               >
-                <img src={imgUrl} alt="" className="w-full h-full object-cover" />
+                <img
+                  src={imgUrl}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src =
+                      'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80';
+                  }}
+                  className="w-full h-full object-cover"
+                />
               </button>
             ))}
           </div>

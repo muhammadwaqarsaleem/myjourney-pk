@@ -447,30 +447,45 @@ export const generateItineraryPlan = async ({
     return generateMockItinerary(destination, tripOptions);
   }
 
-  // 4. Invoke Google Gemini API
+  // 4. Invoke Google Gemini API with fallback models for resilient uptime
   const prompt = buildPrompt(destination, tripOptions);
-  const modelName = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+  const primaryModel = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+  const candidateModels = Array.from(new Set([primaryModel, 'gemini-3.5-flash', 'gemini-3.6-flash', 'gemini-3.1-flash-lite']));
 
-  try {
-    const response = await genAI.models.generateContent({
-      model: modelName,
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json',
-        temperature: 0.7,
-      },
-    });
+  let lastError = null;
+  for (const model of candidateModels) {
+    try {
+      const response = await genAI.models.generateContent({
+        model,
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+          temperature: 0.7,
+        },
+      });
 
-    const responseText = response.text;
-    if (!responseText) {
-      throw new Error('Empty response received from Gemini model.');
+      const responseText = response.text;
+      if (!responseText) {
+        throw new Error('Empty response received from Gemini model.');
+      }
+
+      console.log(`✨ [aiPlannerService] Successfully generated itinerary via Gemini (${model}) for "${destination.name}"`);
+      return parseAndValidateItinerary(responseText, destination, tripDays);
+    } catch (apiError) {
+      lastError = apiError;
+      const detail = apiError.cause ? `${apiError.message} (${apiError.cause.message || apiError.cause.code || 'network offline'})` : apiError.message;
+      console.warn(`⚠️ [aiPlannerService] Gemini attempt with model ${model} failed: ${detail}`);
+
+      // If connection to Google failed at the network/socket level, do not waste time retrying other models
+      if (apiError.message?.includes('fetch failed')) {
+        console.warn('⚠️ [aiPlannerService] Local network or internet connection is offline. Skipping model fallback.');
+        break;
+      }
     }
-
-    return parseAndValidateItinerary(responseText, destination, tripDays);
-  } catch (apiError) {
-    console.warn(`⚠️ [aiPlannerService] Gemini API generation failed (${apiError.message}). Falling back to mock generator.`);
-    return generateMockItinerary(destination, tripOptions);
   }
+
+  console.warn(`⚠️ [aiPlannerService] All Gemini models failed (${lastError?.message}). Falling back to mock generator.`);
+  return generateMockItinerary(destination, tripOptions);
 };
 
 export default {
