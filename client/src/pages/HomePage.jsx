@@ -52,22 +52,41 @@ export default function HomePage() {
 
   return (
     <div className="space-y-16 pb-16">
-      {/* Hero Section with Quick Search */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-brand-sand via-white to-slate-50 py-16 sm:py-24 border-b border-slate-200/70">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-emerald/10 text-brand-emerald text-xs font-bold uppercase tracking-wider">
+      {/* Hero Section with Quick Search & Northern Landscape Background */}
+      <section className="relative overflow-hidden bg-slate-900 py-20 sm:py-28 md:py-32 border-b border-slate-200/40">
+        {/* Northern Pakistan Landscape Background Image */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=2070&q=85"
+            alt="Majestic Passu Cones and Karakoram Mountain Range, Northern Pakistan"
+            className="w-full h-full object-cover object-center"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              // Fallback to iconic Hunza Valley vista
+              e.currentTarget.src =
+                'https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?auto=format&fit=crop&w=2070&q=85';
+            }}
+          />
+          {/* Multi-layered gradient overlay to ensure contrast and readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/75 via-slate-900/60 to-slate-950/85" />
+          <div className="absolute inset-0 bg-emerald-950/20 mix-blend-multiply" />
+        </div>
+
+        {/* Hero Foreground Content */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-950/60 backdrop-blur-md text-emerald-200 text-xs font-bold uppercase tracking-wider border border-emerald-500/30 shadow-lg">
             <Sparkles className="w-3.5 h-3.5 text-brand-mint" />
             <span>Discover Pakistan&apos;s Rich Heritage &amp; Landscapes</span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl font-black text-brand-charcoal tracking-tight max-w-4xl mx-auto leading-tight">
+          <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tight max-w-4xl mx-auto leading-tight drop-shadow-md">
             Explore the Soul &amp; Splendor of{' '}
-            <span className="text-brand-emerald underline decoration-brand-mint decoration-4 underline-offset-6">
+            <span className="text-brand-mint underline decoration-brand-mint/60 decoration-4 underline-offset-6">
               Pakistan
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg text-slate-200 max-w-2xl mx-auto leading-relaxed drop-shadow-xs">
             From the sky-touching peaks of the Karakoram to the historic alleys of Lahore and the
             pristine shores of Makran, plan authentic journeys with verified guides and AI assistance.
           </p>
@@ -76,7 +95,7 @@ export default function HomePage() {
           <div className="max-w-2xl mx-auto pt-2">
             <form
               onSubmit={handleSearchSubmit}
-              className="bg-white p-2 rounded-2xl shadow-lg border border-slate-200/90 flex flex-col sm:flex-row items-stretch gap-2"
+              className="bg-white/95 backdrop-blur-md p-2 rounded-2xl shadow-2xl border border-white/30 flex flex-col sm:flex-row items-stretch gap-2"
             >
               <div className="relative flex-1 flex items-center">
                 <Search className="w-5 h-5 text-slate-400 absolute left-3.5 pointer-events-none" />
@@ -85,14 +104,14 @@ export default function HomePage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search destinations (e.g., Hunza, Lahore, Skardu)..."
-                  className="w-full pl-11 pr-4 py-3 rounded-xl text-sm text-brand-charcoal placeholder-slate-400 focus:outline-none"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl text-sm text-brand-charcoal placeholder-slate-400 focus:outline-none bg-transparent"
                   aria-label="Search destinations"
                 />
               </div>
 
               <button
                 type="submit"
-                className="min-h-[44px] min-w-[44px] px-6 py-3 rounded-xl bg-brand-emerald hover:bg-emerald-800 text-white font-bold text-sm shadow-xs transition flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+                className="min-h-[44px] min-w-[44px] px-6 py-3 rounded-xl bg-brand-emerald hover:bg-emerald-700 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2 shrink-0 cursor-pointer"
               >
                 <span>Find Places</span>
                 <ArrowRight className="w-4 h-4 text-brand-mint" />
@@ -100,20 +119,26 @@ export default function HomePage() {
             </form>
 
             {/* Popular Search Chips */}
-            <div className="flex flex-wrap items-center justify-center gap-2 mt-4 text-xs text-slate-500">
-              <span className="font-semibold text-slate-600">Popular:</span>
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-4 text-xs text-slate-200">
+              <span className="font-semibold text-white/90">Popular:</span>
               {POPULAR_SEARCH_CHIPS.map((chip) => (
                 <button
                   key={chip}
                   type="button"
                   onClick={() => handleChipClick(chip)}
-                  className="px-3 py-1 rounded-full bg-white border border-slate-200 hover:border-brand-emerald hover:text-brand-emerald text-slate-600 transition cursor-pointer"
+                  className="px-3.5 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/25 hover:border-brand-mint hover:bg-white/25 text-white transition cursor-pointer shadow-xs"
                 >
                   {chip}
                 </button>
               ))}
             </div>
           </div>
+        </div>
+
+        {/* Location Badge */}
+        <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-8 z-10 hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-950/60 backdrop-blur-md text-slate-300 text-xs border border-white/10 shadow-lg pointer-events-none">
+          <MapPin className="w-3.5 h-3.5 text-brand-mint shrink-0" />
+          <span>Passu Cones, Karakoram Range • Gilgit-Baltistan</span>
         </div>
       </section>
 
@@ -181,6 +206,12 @@ export default function HomePage() {
                     src={dest.bannerImage || 'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=800&q=80'}
                     alt={dest.name}
                     loading="lazy"
+                    decoding="async"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src =
+                        'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=800&q=80';
+                    }}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute top-3 left-3">

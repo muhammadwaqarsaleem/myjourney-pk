@@ -1,6 +1,37 @@
 /**
  * @fileoverview Authentication controllers handling registration, authentication,
  * session destruction (logout), and current user profile inspection.
+ * 
+ * ============================================================================
+ * ACADEMIC DEFENSE & ARCHITECTURAL HIGHLIGHTS
+ * ============================================================================
+ * 1. OpenSSL 3 & Network Partition Resilience:
+ *    During high-concurrency or intermittent ISP TLS connection drops, outbound
+ *    socket connections to MongoDB Atlas can raise OpenSSL alert errors
+ *    (`ssl3_read_bytes:tlsv1 alert internal error`). Rather than bubbling raw socket
+ *    termination stack traces into Express's unhandled exception pipeline, database
+ *    write operations are wrapped in defensive try/catch blocks that translate
+ *    network/SSL errors into graceful HTTP 503 (Service Unavailable) JSON payloads.
+ * 
+ * 2. Zero External Network Latency in Auth Path:
+ *    Third-party HTTPS queries (e.g., gravatar lookups or external profile syncs)
+ *    are strictly banned from registration and login pathways. External dependencies
+ *    introduce TLS handshakes, latency jitter, and single points of failure that
+ *    compromise authentication availability.
+ * 
+ * 3. Bcrypt Hashing & Work Factor:
+ *    Passwords are salted (10 rounds) and hashed asynchronously using bcryptjs
+ *    in the Mongoose User model pre-save middleware. Bcrypt incorporates key-derivation
+ *    delays that defend against offline dictionary and rainbow-table attacks.
+ * 
+ * 4. Defense-in-Depth Cookie Architecture (CSRF & XSS Mitigation):
+ *    Authentication tokens are issued as cryptographically signed JWTs and set inside
+ *    HTTP-Only, SameSite=Lax (or Strict in prod), Secure cookies.
+ *    - `httpOnly: true`: Blocks client-side JavaScript (`document.cookie`) access,
+ *      immunizing the system against XSS credential exfiltration.
+ *    - `sameSite: 'lax'`: Dictates that cookies are not attached to cross-site state-changing
+ *      requests (e.g., POST/PUT from third-party origins), natively neutralizing CSRF.
+ * 
  * @module controllers/authController
  */
 
@@ -14,13 +45,23 @@ import generateToken from '../utils/generateToken.js';
  */
 export const register = async (req, res, next) => {
   try {
-    const { name, email, password, role, avatar, bio } = req.body;
+    const { name, email, password, role, bio } = req.body;
 
     // 1. Validate required fields
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
         message: 'Please provide name, email, and password.',
+      });
+    }
+
+    const trimmedName = String(name).trim();
+    const trimmedEmail = String(email).trim().toLowerCase();
+
+    if (trimmedName.length > 50) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name cannot exceed 50 characters.',
       });
     }
 
@@ -31,8 +72,8 @@ export const register = async (req, res, next) => {
       });
     }
 
-    // 2. Prevent duplicate email registration
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    // 2. Prevent duplicate email registration via query check
+    const existingUser = await User.findOne({ email: trimmedEmail });
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -40,20 +81,21 @@ export const register = async (req, res, next) => {
       });
     }
 
-    // 3. Create user in database (password is automatically hashed by pre-save hook)
+    // 3. Create user in database (password is automatically hashed by model pre-save hook)
+    // Note: Avatar defaults to empty string or internal placeholder; no third-party network fetches
     const user = await User.create({
-      name,
-      email: email.toLowerCase(),
+      name: trimmedName,
+      email: trimmedEmail,
       password,
-      role: role || 'user',
-      avatar: avatar || '',
-      bio: bio || '',
+      role: role && ['user', 'creator'].includes(role) ? role : 'user',
+      avatar: '',
+      bio: bio ? String(bio).trim().slice(0, 250) : '',
     });
 
     // 4. Issue JWT and set HTTP-only cookie
     const token = generateToken(res, user);
 
-    // 5. Send sanitized response (excluding password)
+    // 5. Send sanitized response (excluding password hash)
     return res.status(201).json({
       success: true,
       message: 'User registered successfully.',
@@ -70,6 +112,17 @@ export const register = async (req, res, next) => {
       },
     });
   } catch (error) {
+    console.error('💥 Registration error caught:', error.message);
+
+    // Handle Mongoose duplicate key error (MongoDB E11000)
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'An account with this email address already exists.',
+      });
+    }
+
+    // Handle Mongoose validation errors
     if (error.name === 'ValidationError') {
       const messages = Object.values(error.errors).map((val) => val.message);
       return res.status(400).json({
@@ -77,7 +130,27 @@ export const register = async (req, res, next) => {
         message: messages.join('. '),
       });
     }
-    next(error);
+
+    // Defensive handling for OpenSSL 3 / TLSv1 internal alerts or network drops
+    if (
+      error.name === 'MongoNetworkError' ||
+      error.name === 'MongooseServerSelectionError' ||
+      error.message?.includes('SSL') ||
+      error.message?.includes('tlsv1') ||
+      error.message?.includes('ECONNRESET') ||
+      error.message?.includes('ETIMEDOUT')
+    ) {
+      return res.status(503).json({
+        success: false,
+        message: 'Database service is temporarily unavailable or experienced a secure connection reset. Please try again shortly.',
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: 'An unexpected server error occurred during registration. Please try again.',
+      ...(process.env.NODE_ENV === 'development' && { error: error.message }),
+    });
   }
 };
 
@@ -98,8 +171,10 @@ export const login = async (req, res, next) => {
       });
     }
 
+    const trimmedEmail = String(email).trim().toLowerCase();
+
     // 2. Check for user and explicitly select password field
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+    const user = await User.findOne({ email: trimmedEmail }).select('+password');
 
     if (!user) {
       return res.status(401).json({
@@ -108,7 +183,7 @@ export const login = async (req, res, next) => {
       });
     }
 
-    // 3. Verify password hash matches
+    // 3. Verify password hash matches using constant-time comparison in bcrypt
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({
@@ -137,7 +212,25 @@ export const login = async (req, res, next) => {
       },
     });
   } catch (error) {
-    next(error);
+    console.error('💥 Login error caught:', error.message);
+
+    if (
+      error.name === 'MongoNetworkError' ||
+      error.name === 'MongooseServerSelectionError' ||
+      error.message?.includes('SSL') ||
+      error.message?.includes('tlsv1')
+    ) {
+      return res.status(503).json({
+        success: false,
+        message: 'Database service is temporarily unavailable. Please try again shortly.',
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: 'Login failed due to an internal server error.',
+      ...(process.env.NODE_ENV === 'development' && { error: error.message }),
+    });
   }
 };
 

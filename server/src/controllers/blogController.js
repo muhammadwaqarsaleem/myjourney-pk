@@ -154,7 +154,7 @@ export const getBlogBySlug = async (req, res) => {
     const blog = await Blog.findOneAndUpdate(
       query,
       { $inc: { views: 1 } },
-      { new: true }
+      { returnDocument: 'after' }
     )
       .populate('author', 'name avatar bio role')
       .populate('destination', 'name slug province bannerImage');

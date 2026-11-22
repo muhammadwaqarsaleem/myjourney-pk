@@ -33,6 +33,8 @@ export const generateItinerary = async (req, res) => {
       });
     }
 
+    console.log(`🗺️ [itineraryController] Inbound request to generate ${days || 3}-day plan for destination: ${destinationId}`);
+
     // 2. Validate days (1-14)
     let parsedDays = 3;
     if (days !== undefined && days !== null && days !== '') {

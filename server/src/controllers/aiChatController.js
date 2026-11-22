@@ -29,6 +29,8 @@ export const handleChatMessage = async (req, res, next) => {
       });
     }
 
+    console.log(`💬 [aiChatController] Inbound travel query: "${message.trim().slice(0, 60)}${message.trim().length > 60 ? '...' : ''}"`);
+
     // Validate conversationHistory structure if provided
     if (conversationHistory !== undefined && conversationHistory !== null && !Array.isArray(conversationHistory)) {
       return res.status(400).json({

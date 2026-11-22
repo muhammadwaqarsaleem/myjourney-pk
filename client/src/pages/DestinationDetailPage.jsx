@@ -209,6 +209,13 @@ export default function DestinationDetailPage() {
               'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1600&q=80'
             }
             alt={destination.name}
+            loading="lazy"
+            decoding="async"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src =
+                'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1600&q=80';
+            }}
             className="w-full h-full object-cover opacity-85"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent" />
@@ -367,6 +374,12 @@ export default function DestinationDetailPage() {
                         src={site.image}
                         alt={site.name}
                         loading="lazy"
+                        decoding="async"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src =
+                            'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=600&q=80';
+                        }}
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -417,6 +430,12 @@ export default function DestinationDetailPage() {
                         src={food.image}
                         alt={food.name}
                         loading="lazy"
+                        decoding="async"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src =
+                            'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80';
+                        }}
                         className="w-full h-full object-cover"
                       />
                     </div>
